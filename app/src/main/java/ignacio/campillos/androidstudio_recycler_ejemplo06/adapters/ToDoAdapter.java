@@ -1,6 +1,8 @@
 package ignacio.campillos.androidstudio_recycler_ejemplo06.adapters;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,11 +65,20 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.TodoVH> {
             holder.btnCompletado.setImageResource(android.R.drawable.checkbox_off_background);
         }
 
+        //Al hacer click en la imagen, lanzara el AlertDialog con X titulo y la clase tod0 para
+        //cambiar el isCompletado y por ende la foto (marcada/desmarcada)
+
         holder.btnCompletado.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                toDo.setCompletado(!toDo.isCompletado());
-                notifyDataSetChanged();
+                confirmUpdate("¿Seguro que quieres cambiar?", toDo).show();
+            }
+        });
+
+        holder.btnDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               confirmDelete("Va a eliminar una tarea", holder.getAdapterPosition()).show();
             }
         });
 
@@ -81,11 +92,52 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.TodoVH> {
 
     }
 
+    //fusionando con el metodo Confirm update para sacar un
+    //alert dialog avisando de si quiere borrar o no
+    private AlertDialog confirmDelete(String titulo,int posicion){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+        builder.setTitle(titulo);
+        builder.setCancelable(false);
+
+        builder.setNegativeButton("NO", null);
+        builder.setPositiveButton("SI", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                objects.remove(posicion);
+                notifyItemRemoved(posicion);
+            }
+        });
+
+        return builder.create();
+    }
+
+    private AlertDialog confirmUpdate(String titulo, ToDo todo){
+        //Construir el alert dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        //Poner titulo
+        builder.setTitle(titulo);
+        //No quitar la alerta al tocar fuera de ella misma
+        builder.setCancelable(false);
+
+        //Definir boton negativo
+        builder.setNegativeButton("NO",null);
+
+        //Definir boton positivo (Si pulsan entonces cambiar el boton a marcado/desmarcado)
+        builder.setPositiveButton("SI", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                todo.setCompletado(!todo.isCompletado());
+                notifyDataSetChanged(); //Actualizar elementos
+            }
+        });
+        return builder.create();
+    }
     public class TodoVH extends RecyclerView.ViewHolder{
 
         //Los elementos de la view "todo_view_model"
         TextView lbTitulo, lbContenido, lbFecha;
-        ImageButton btnCompletado;
+        ImageButton btnCompletado, btnDelete;
 
         public TodoVH(@NonNull View itemView) {
             super(itemView);
@@ -94,7 +146,7 @@ public class ToDoAdapter extends RecyclerView.Adapter<ToDoAdapter.TodoVH> {
             lbContenido = itemView.findViewById(R.id.lbContenidoToDoViewModel);
             lbFecha = itemView.findViewById(R.id.lbFechaToDoViewModel);
             btnCompletado = itemView.findViewById(R.id.btnCompletadoToDoViewModel);
-
+            btnDelete = itemView.findViewById(R.id.btnDeleteToDoViewModel);
         }
     }
 }
